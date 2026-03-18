@@ -27,7 +27,7 @@ if __name__ == "__main__":
             print(f"Tick atual: {clock.tick}")
             print()
             print("Legenda:")
-            print("CR = carro rápido | CM = carro médio | CL = carro lento")
+            print("CR = carro rápido | CM = carro médio | CL = carro lento | AM = ambulância")
             print("L  = semáforo liberando linha | C  = semáforo liberando coluna")
             print()
 
