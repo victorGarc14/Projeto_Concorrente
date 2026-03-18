@@ -4,6 +4,7 @@ import malha
 
 
 VELOCIDADES = {
+    "emergencia": 1,
     "rapido": 1,
     "medio": 2,
     "lento": 4,
