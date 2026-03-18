@@ -1,8 +1,8 @@
 import threading
 
-# =========================
-# CONSTANTES
-# =========================
+
+#CONSTANTES
+
 EMPTY = 0
 RIGHT = 1
 LEFT = 2
@@ -13,10 +13,8 @@ SEMAPHORE = 5
 LINHAS = 13
 COLUNAS = 21
 
+#CLASSE SEMÁFORO
 
-# =========================
-# CLASSE SEMÁFORO
-# =========================
 class Semaforo:
     def __init__(self, estado_inicial=0):
         self.estado = estado_inicial
@@ -38,9 +36,8 @@ class Semaforo:
             self.estado = 0
 
 
-# =========================
-# ESTRUTURAS DA MALHA
-# =========================
+#ESTRUTURAS DA MALHA
+
 malha = [[EMPTY for _ in range(COLUNAS)] for _ in range(LINHAS)]
 semaforos = {}
 
@@ -53,18 +50,15 @@ def construir_malha():
 
     semaforos.clear()
 
-    # =========================
     # LINHAS HORIZONTAIS
-    # =========================
+
     for j in range(COLUNAS):
         malha[0][j] = LEFT      # linha 0  ->
         malha[5][j] = LEFT       # linha 5  <-
         malha[10][j] = RIGHT     # linha 10 ->
-        malha[12][j] = RIGHT     # linha 12 -> (ALTERADO)
+        malha[12][j] = RIGHT     # linha 12 -> 
 
-    # =========================
-    # COLUNAS VERTICAIS
-    # =========================
+    #COLUNAS VERTICAIS
 
     # coluna 0 inteira ↓
     for i in range(LINHAS):
@@ -76,13 +70,11 @@ def construir_malha():
         malha[i][10] = DOWN
         malha[i][15] = UP
 
-    # coluna 20 inteira ↑ (ALTERADO)
+    # coluna 20 inteira ↑ 
     for i in range(LINHAS):
         malha[i][20] = UP
 
-    # =========================
     # SEMÁFOROS
-    # =========================
     posicoes_semaforos = [
         (10, 5), (10, 10), (10, 15), (10, 20),
         (5, 0), (5, 5), (5, 10), (5, 15),
@@ -92,10 +84,7 @@ def construir_malha():
         malha[i][j] = SEMAPHORE
         semaforos[(i, j)] = Semaforo(estado_inicial=0)
 
-
-# =========================
-# VISUALIZAÇÃO
-# =========================
+#VISUALIZAÇÃO
 def print_malha():
     simbolos = {
         EMPTY: " ",
@@ -113,9 +102,6 @@ def print_malha():
         print(linha)
 
 
-# =========================
-# UTILITÁRIOS
-# =========================
 def obter_semaforo(pos):
     return semaforos.get(pos)
 
