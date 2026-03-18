@@ -7,24 +7,6 @@ class Ambulancia(Car):
 
     def nome(self):
         return f"AMB-{self.car_id:02d}"
-    
-    # def tentar_mover(self, tick):
-    #     prox = self.escolher_movimento()
-    #     if prox is None:
-    #         return
-
-    #     self.esperar_semaforo_se_necessario(prox)
-
-    #     with ocupacao_lock:
-    #         if prox in ocupacao:
-    #             carro_frente = ocupacao[prox]
-
-    #             # 🚨 remove o carro da frente (prioridade)
-    #             del ocupacao[carro_frente.posicao]
-
-    #         del ocupacao[self.posicao]
-    #         ocupacao[prox] = self
-    #         self.posicao = prox
 
     def esperar_semaforo_se_necessario(self, prox):
         if not malha.eh_semaforo(prox):
@@ -34,13 +16,11 @@ class Ambulancia(Car):
         if sem is None:
             return
 
-        # 🚨 FORÇA o semáforo a abrir para ela
         if self.direcao_atual in (malha.RIGHT, malha.LEFT):
             sem.forcar_linha()
         else:
             sem.forcar_coluna()
 
-        # opcional: ainda espera sincronização segura
         sem.esperar_liberacao(self.direcao_atual)
         
     def abrir_semaforos_a_frente(self):
@@ -52,7 +32,6 @@ class Ambulancia(Car):
             if prox is None:
                 return
 
-            # se encontrou um semáforo
             if malha.eh_semaforo(prox):
                 sem = malha.obter_semaforo(prox)
 
@@ -61,13 +40,10 @@ class Ambulancia(Car):
                 else:
                     sem.forcar_coluna()
 
-                return  # para no primeiro semáforo
-
-            # se não for transitável, para
+                return
             if not malha.eh_transitavel(*prox):
                 return
 
-            # continua avançando na via
             pos = prox
             
             
