@@ -2,7 +2,6 @@ import threading
 
 
 #CONSTANTES
-
 EMPTY = 0
 RIGHT = 1
 LEFT = 2
@@ -10,111 +9,218 @@ UP = 3
 DOWN = 4
 SEMAPHORE = 5
 
+#estado do semáforo
+LIBERA_LINHA = 0
+LIBERA_COLUNA = 1
+
 LINHAS = 13
 COLUNAS = 21
 
-#CLASSE SEMÁFORO
 
+#CLASSE SEMÁFORO
 class Semaforo:
-    def __init__(self, estado_inicial=0):
+    def __init__(self, estado_inicial=LIBERA_LINHA):
         self.estado = estado_inicial
         self.lock = threading.Lock()
         self.cond = threading.Condition(self.lock)
 
-    def esperar_verde(self):
-        with self.cond:
-            while self.estado == 0:
-                self.cond.wait()
+    def libera_linha(self):
+        return self.estado == LIBERA_LINHA
 
-    def abrir(self):
+    def libera_coluna(self):
+        return self.estado == LIBERA_COLUNA
+
+    def alternar(self):
         with self.cond:
-            self.estado = 1
+            if self.estado == LIBERA_LINHA:
+                self.estado = LIBERA_COLUNA
+            else:
+                self.estado = LIBERA_LINHA
             self.cond.notify_all()
 
-    def fechar(self):
+    def definir_estado(self, novo_estado):
         with self.cond:
-            self.estado = 0
+            self.estado = novo_estado
+            self.cond.notify_all()
+
+    def esperar_liberacao(self, direcao):
+        with self.cond:
+            while True:
+                if direcao in (RIGHT, LEFT) and self.estado == LIBERA_LINHA:
+                    return
+                if direcao in (UP, DOWN) and self.estado == LIBERA_COLUNA:
+                    return
+                self.cond.wait()
+
 
 
 #ESTRUTURAS DA MALHA
-
 malha = [[EMPTY for _ in range(COLUNAS)] for _ in range(LINHAS)]
+direcoes_base = [[EMPTY for _ in range(COLUNAS)] for _ in range(LINHAS)]
 semaforos = {}
+
+ordem_semaforos = [
+    (5, 0),
+    (5, 5),
+    (5, 10),
+    (5, 15),
+    (10, 5),
+    (10, 10),
+    (10, 15),
+    (10, 20),
+]
 
 
 def construir_malha():
-    # limpa a malha
     for i in range(LINHAS):
         for j in range(COLUNAS):
             malha[i][j] = EMPTY
+            direcoes_base[i][j] = EMPTY
 
     semaforos.clear()
 
     # LINHAS HORIZONTAIS
-
     for j in range(COLUNAS):
-        malha[0][j] = LEFT      # linha 0  ->
-        malha[5][j] = LEFT       # linha 5  <-
-        malha[10][j] = RIGHT     # linha 10 ->
-        malha[12][j] = RIGHT     # linha 12 -> 
+        malha[0][j] = LEFT
+        direcoes_base[0][j] = LEFT
 
-    #COLUNAS VERTICAIS
+        malha[5][j] = LEFT
+        direcoes_base[5][j] = LEFT
 
-    # coluna 0 inteira ↓
+        malha[10][j] = RIGHT
+        direcoes_base[10][j] = RIGHT
+
+        malha[12][j] = RIGHT
+        direcoes_base[12][j] = RIGHT
+
+    # COLUNAS VERTICAIS
     for i in range(LINHAS):
         malha[i][0] = DOWN
+        direcoes_base[i][0] = DOWN
 
-    # colunas 5, 10, 15 apenas entre linhas 6 e 9
     for i in range(6, 10):
         malha[i][5] = UP
-        malha[i][10] = DOWN
-        malha[i][15] = UP
+        direcoes_base[i][5] = UP
 
-    # coluna 20 inteira ↑ 
+        malha[i][10] = DOWN
+        direcoes_base[i][10] = DOWN
+
+        malha[i][15] = UP
+        direcoes_base[i][15] = UP
+
     for i in range(LINHAS):
         malha[i][20] = UP
+        direcoes_base[i][20] = UP
 
     # SEMÁFOROS
-    posicoes_semaforos = [
-        (10, 5), (10, 10), (10, 15), (10, 20),
-        (5, 0), (5, 5), (5, 10), (5, 15),
-    ]
-
-    for i, j in posicoes_semaforos:
+    for indice, (i, j) in enumerate(ordem_semaforos, start=1):
         malha[i][j] = SEMAPHORE
-        semaforos[(i, j)] = Semaforo(estado_inicial=0)
+        estado_inicial = LIBERA_LINHA if indice % 2 == 1 else LIBERA_COLUNA
+        semaforos[(i, j)] = Semaforo(estado_inicial=estado_inicial)
 
-#VISUALIZAÇÃO
-def print_malha():
-    simbolos = {
-        EMPTY: " ",
-        RIGHT: "→",
-        LEFT: "←",
-        UP: "↑",
-        DOWN: "↓",
-        SEMAPHORE: "●",
-    }
 
-    for i in range(LINHAS):
-        linha = ""
-        for j in range(COLUNAS):
-            linha += simbolos[malha[i][j]] + " "
-        print(linha)
+def dentro(i, j):
+    return 0 <= i < LINHAS and 0 <= j < COLUNAS
 
 
 def obter_semaforo(pos):
     return semaforos.get(pos)
 
 
-def tem_semaforo_adjacente(i, j):
-    for di, dj in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-        ni, nj = i + di, j + dj
-        if (ni, nj) in semaforos:
-            return (ni, nj)
+def eh_semaforo(pos):
+    return pos in semaforos
+
+
+def direcao_em(i, j):
+    return direcoes_base[i][j]
+
+
+def eh_transitavel(i, j):
+    if not dentro(i, j):
+        return False
+    return direcoes_base[i][j] != EMPTY or eh_semaforo((i, j))
+
+
+def proxima_posicao(i, j, direcao):
+    if direcao == RIGHT:
+        ni, nj = i, j + 1
+    elif direcao == LEFT:
+        ni, nj = i, j - 1
+    elif direcao == UP:
+        ni, nj = i - 1, j
+    elif direcao == DOWN:
+        ni, nj = i + 1, j
+    else:
+        return None
+
+    if not dentro(ni, nj):
+        return None
+
+    return ni, nj
+
+
+def direcao_horizontal_da_linha(i):
+    if i in (10, 12):
+        return RIGHT
+    if i in (0, 5):
+        return LEFT
     return None
 
 
-# =========================
-# INICIALIZAÇÃO
-# =========================
+def direcao_vertical_da_coluna(j):
+    if j in (0, 10):
+        return DOWN
+    if j in (5, 15, 20):
+        return UP
+    return None
+
+
+def simbolo_base(i, j):
+    if eh_semaforo((i, j)):
+        sem = semaforos[(i, j)]
+        return "L " if sem.estado == LIBERA_LINHA else "C "
+
+    valor = malha[i][j]
+    if valor == RIGHT:
+        return "→ "
+    if valor == LEFT:
+        return "← "
+    if valor == UP:
+        return "↑ "
+    if valor == DOWN:
+        return "↓ "
+    return "  "
+
+
+def renderizar_com_carros(ocupacao):
+    linhas_render = []
+
+    cabecalho = "     " + " ".join(f"{j:>2}" for j in range(COLUNAS))
+    linhas_render.append(cabecalho)
+    linhas_render.append("")
+
+    for i in range(LINHAS):
+        partes = [f"{i:>2} |"]
+        for j in range(COLUNAS):
+            if (i, j) in ocupacao:
+                carro = ocupacao[(i, j)]
+                if carro.tipo_velocidade == "rapido":
+                    celula = "CR"
+                elif carro.tipo_velocidade == "medio":
+                    celula = "CM"
+                else:
+                    celula = "CL"
+            else:
+                celula = simbolo_base(i, j)
+
+            partes.append(f"{celula:>2}")
+        linhas_render.append(" ".join(partes))
+
+    return "\n".join(linhas_render)
+
+
+def print_malha():
+    print(renderizar_com_carros({}))
+
+
 construir_malha()

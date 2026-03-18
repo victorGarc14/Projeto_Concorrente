@@ -11,65 +11,47 @@ class Clock(threading.Thread):
         self.tick_duration = tick_duration
         self.running = True
 
-        # Ordem dos semáforos
-        self.semaphore_order = [
-            (5, 0), (5, 5), (5, 10), (5, 15),
-            (10, 5), (10, 10), (10, 15), (10, 20),
-        ]
-
-        # Cada semáforo fica aberto por 6 ticks
         self.green_time = 6
 
-        self.current_index = 0
-        self.open_tick = 0
+        self.tick_lock = threading.Lock()
+        self.tick_cond = threading.Condition(self.tick_lock)
 
-    #CONTROLE DE SEMÁFOROS
+    def wait_next_tick(self, ultimo_tick_visto):
+        with self.tick_cond:
+            while self.running and self.tick <= ultimo_tick_visto:
+                self.tick_cond.wait()
 
-    def close_all(self):
-        for sem in malha.semaforos.values():
-            sem.fechar()
+            if not self.running:
+                return None
 
-    def current_semaphore_pos(self):
-        return self.semaphore_order[self.current_index]
+            return self.tick
 
-    def open_current(self):
-        pos = self.current_semaphore_pos()
-        sem = malha.obter_semaforo(pos)
+    def alternar_todos_os_semaforos(self):
+        for pos in malha.ordem_semaforos:
+            sem = malha.obter_semaforo(pos)
+            if sem is not None:
+                sem.alternar()
 
-        if sem:
-            sem.abrir()
-            print(f"[CLOCK] Tick {self.tick:02d} -> OPEN   {pos}")
-
-    def close_current(self):
-        pos = self.current_semaphore_pos()
-        sem = malha.obter_semaforo(pos)
-
-        if sem:
-            sem.fechar()
-            print(f"[CLOCK] Tick {self.tick:02d} -> CLOSE  {pos}")
-
-    def next_semaphore(self):
-        self.current_index = (self.current_index + 1) % len(self.semaphore_order)
-        self.open_tick = self.tick
-        self.open_current()
-
-    #LOOP PRINCIPAL
+    def estado_resumido(self):
+        partes = []
+        for indice, pos in enumerate(malha.ordem_semaforos, start=1):
+            sem = malha.obter_semaforo(pos)
+            estado = "L" if sem.estado == malha.LIBERA_LINHA else "C"
+            partes.append(f"S{indice}:{estado}")
+        return " | ".join(partes)
 
     def run(self):
-        self.close_all()
-
-        self.open_tick = 0
-        self.open_current()
-
         while self.running:
-            print(f"[CLOCK] Tick: {self.tick}")
             time.sleep(self.tick_duration)
-            self.tick += 1
 
-            if self.tick - self.open_tick >= self.green_time:
-                self.close_current()
-                self.next_semaphore()
+            with self.tick_cond:
+                self.tick += 1
+                self.tick_cond.notify_all()
+
+            if self.tick % self.green_time == 0:
+                self.alternar_todos_os_semaforos()
 
     def stop(self):
         self.running = False
-        self.close_all()
+        with self.tick_cond:
+            self.tick_cond.notify_all()
