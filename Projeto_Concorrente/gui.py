@@ -87,7 +87,7 @@ class SimulacaoGUI:
                 if (i, j) in ocupacao:
                     carro = ocupacao[(i, j)]
 
-                    if carro.tipo_velocidade == "emergencia":
+                    if carro.tipo_velocidade == "ambulancia":
                         self.desenhar_sprite(i, j, self.ambulancia)
                     elif carro.tipo_velocidade == "rapido":
                         self.desenhar_sprite(i, j, self.carro_rapido)

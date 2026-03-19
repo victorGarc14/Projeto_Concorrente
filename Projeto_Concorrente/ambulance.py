@@ -1,28 +1,63 @@
-import random
-import car 
+from car import Car, ocupacao, ocupacao_lock
 import malha
-
-class Ambulance(car.Car):
+class Ambulancia(Car):
     def __init__(self, car_id, posicao_inicial, clock):
-        # A ambulância usa o tipo 'emergencia' (intervalo 1)(mudei o nome somente caso queira diminuir os ticks para 0.5)
-        super().__init__(car_id, "emergencia", posicao_inicial, clock)
+        super().__init__(car_id, "rapido", posicao_inicial, clock)
+        self.tipo_velocidade = "ambulancia"
+
+    def nome(self):
+        return f"AMB-{self.car_id:02d}"
 
     def esperar_semaforo_se_necessario(self, prox):
         if not malha.eh_semaforo(prox):
             return
 
         sem = malha.obter_semaforo(prox)
-        if sem:
-            # REGRA DE PRIORIDADE: Força a abertura do sinal
-            sem.forcar_liberacao(self.direcao_atual)
-            # Como o método forcar_liberacao já dá o notify_all, ela pode seguir sem esperar. 
+        if sem is None:
+            return
 
-def criar_ambulancia(clock):
-    """Função análoga ao criar_carros, mas específica para a ambulância"""
-    posicoes = car.posicoes_iniciais_possiveis()
-    if not posicoes:
-        return None
-    
-    posicao_escolhida = random.choice(posicoes)
-    # Usamos um ID alto (ex: 99) para diferenciar nos logs
-    return Ambulance(99, posicao_escolhida, clock)
+        if self.direcao_atual in (malha.RIGHT, malha.LEFT):
+            sem.forcar_linha()
+        else:
+            sem.forcar_coluna()
+
+        sem.esperar_liberacao(self.direcao_atual)
+        
+    def abrir_semaforos_a_frente(self):
+        pos = self.posicao
+
+        while True:
+            prox = malha.proxima_posicao(*pos, self.direcao_atual)
+
+            if prox is None:
+                return
+
+            if malha.eh_semaforo(prox):
+                sem = malha.obter_semaforo(prox)
+
+                if self.direcao_atual in (malha.RIGHT, malha.LEFT):
+                    sem.forcar_linha()
+                else:
+                    sem.forcar_coluna()
+
+                return
+            if not malha.eh_transitavel(*prox):
+                return
+
+            pos = prox
+            
+            
+    def run(self):
+        while self.running:
+            tick = self.clock.wait_next_tick(self.ultimo_tick_visto)
+            if tick is None:
+                break
+
+            self.ultimo_tick_visto = tick
+
+            self.abrir_semaforos_a_frente()
+
+            if not self.pode_tentar_mover_neste_tick(tick):
+                continue
+
+            self.tentar_mover(tick)

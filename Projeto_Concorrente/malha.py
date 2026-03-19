@@ -52,14 +52,15 @@ class Semaforo:
                     return
                 self.cond.wait()
                 
-    def forcar_liberacao(self, direcao_solicitada):
+    def forcar_linha(self):
         with self.cond:
-            # Determina qual estado libera a direção da ambulância
-            novo_estado = LIBERA_LINHA if direcao_solicitada in (RIGHT, LEFT) else LIBERA_COLUNA
-        
-            if self.estado != novo_estado:
-                self.estado = novo_estado
-                self.cond.notify_all() # Acorda todos os carros, incluindo a ambulância
+            self.estado = LIBERA_LINHA
+            self.cond.notify_all()
+
+    def forcar_coluna(self):
+        with self.cond:
+            self.estado = LIBERA_COLUNA
+            self.cond.notify_all()
 
 
 
@@ -213,8 +214,8 @@ def renderizar_com_carros(ocupacao):
         for j in range(COLUNAS):
             if (i, j) in ocupacao:
                 carro = ocupacao[(i, j)]
-                if carro.tipo_velocidade == "emergencia":
-                    celula = "AM" 
+                if carro.tipo_velocidade == "ambulancia":
+                    celula = "AM"
                 elif carro.tipo_velocidade == "rapido":
                     celula = "CR"
                 elif carro.tipo_velocidade == "medio":

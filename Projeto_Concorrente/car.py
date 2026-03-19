@@ -4,7 +4,7 @@ import malha
 
 
 VELOCIDADES = {
-    "emergencia": 1,
+    "ambulancia": 1,
     "rapido": 1,
     "medio": 2,
     "lento": 4,
@@ -186,6 +186,7 @@ class Car(threading.Thread):
 
 
 def criar_carros(clock):
+    from ambulance import Ambulancia  
     tipos = [
         "rapido", "rapido",
         "medio", "medio",
@@ -194,10 +195,15 @@ def criar_carros(clock):
     ]
 
     posicoes = posicoes_iniciais_possiveis()
-    escolhidas = random.sample(posicoes, len(tipos))
+    escolhidas = random.sample(posicoes, len(tipos) + 1)
 
     carros = []
-    for idx, (tipo, pos) in enumerate(zip(tipos, escolhidas), start=1):
+    
+    amb = Ambulancia(0, escolhidas[0], clock)
+    carros.append(amb)
+    
+    
+    for idx, (tipo, pos) in enumerate(zip(tipos, escolhidas[1:]), start=1):
         carro = Car(idx, tipo, pos, clock)
         carros.append(carro)
 
