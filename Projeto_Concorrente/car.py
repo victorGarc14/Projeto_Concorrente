@@ -75,6 +75,9 @@ class Car(threading.Thread):
             return None
         return prox
 
+    def get_direcao_atual(self): 
+        return self.direcao_atual 
+
     def opcoes_de_movimento(self):
         i, j = self.posicao
 

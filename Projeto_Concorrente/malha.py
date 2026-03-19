@@ -89,42 +89,35 @@ def construir_malha():
 
     semaforos.clear()
 
-    # LINHAS HORIZONTAIS
+    # LINHAS
     for j in range(COLUNAS):
-        malha[0][j] = LEFT
-        direcoes_base[0][j] = LEFT
+        for i in [0, 5]:
+            malha[i][j] = LEFT
+            direcoes_base[i][j] = LEFT
 
-        malha[5][j] = LEFT
-        direcoes_base[5][j] = LEFT
+        for i in [10, 12]:
+            malha[i][j] = RIGHT
+            direcoes_base[i][j] = RIGHT
 
-        malha[10][j] = RIGHT
-        direcoes_base[10][j] = RIGHT
+    # COLUNAS
+    colunas_descendo = [0, 10]
+    colunas_subindo = [5, 15, 20]
 
-        malha[12][j] = RIGHT
-        direcoes_base[12][j] = RIGHT
+    for j in colunas_descendo:
+        for i in range(LINHAS):
+            # só coloca se não for rua já existente
+            if direcoes_base[i][j] == EMPTY:
+                malha[i][j] = DOWN
+                direcoes_base[i][j] = DOWN
 
-    # COLUNAS VERTICAIS
-    for i in range(LINHAS):
-        malha[i][0] = DOWN
-        direcoes_base[i][0] = DOWN
-
-    for i in range(6, 10):
-        malha[i][5] = UP
-        direcoes_base[i][5] = UP
-
-        malha[i][10] = DOWN
-        direcoes_base[i][10] = DOWN
-
-        malha[i][15] = UP
-        direcoes_base[i][15] = UP
-
-    for i in range(LINHAS):
-        malha[i][20] = UP
-        direcoes_base[i][20] = UP
+    for j in colunas_subindo:
+        for i in range(LINHAS):
+            if direcoes_base[i][j] == EMPTY:
+                malha[i][j] = UP
+                direcoes_base[i][j] = UP
 
     # SEMÁFOROS
     for indice, (i, j) in enumerate(ordem_semaforos, start=1):
-        malha[i][j] = SEMAPHORE
         estado_inicial = LIBERA_LINHA if indice % 2 == 1 else LIBERA_COLUNA
         semaforos[(i, j)] = Semaforo(estado_inicial=estado_inicial)
 

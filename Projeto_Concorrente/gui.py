@@ -1,3 +1,4 @@
+from malha import LEFT, RIGHT, UP, DOWN
 import tkinter as tk
 from PIL import Image, ImageTk
 import malha
@@ -14,6 +15,7 @@ class SimulacaoGUI:
     def __init__(self, clock, snapshot_func):
         self.clock = clock
         self.snapshot_func = snapshot_func
+        self.last_tick = -1
 
         self.root = tk.Tk()
         self.root.title("Simulação de Tráfego")
@@ -27,10 +29,10 @@ class SimulacaoGUI:
         self.info = tk.Label(self.root, text="", font=("Arial", 12))
         self.info.pack()
 
-        self.carro_rapido = self.carregar_imagem("carro_rapido.png")
-        self.carro_medio = self.carregar_imagem("carro_medio.png")
-        self.carro_lento = self.carregar_imagem("carro_lento.png")
-        self.ambulancia = self.carregar_imagem("ambulancia.png")
+        self.carro_rapido = self.carregar_sprite_direcional("carro_rapido.png")
+        self.carro_medio = self.carregar_sprite_direcional("carro_medio.png")
+        self.carro_lento = self.carregar_sprite_direcional("carro_lento.png")
+        self.ambulancia = self.carregar_sprite_direcional("ambulancia.png")
 
         self.semaforo_linha = self.carregar_imagem("semaforo_linha.png")
         self.semaforo_coluna = self.carregar_imagem("semaforo_coluna.png")
@@ -43,6 +45,22 @@ class SimulacaoGUI:
             img = Image.open(caminho)
             img = img.resize((CELL_SIZE, CELL_SIZE), Image.LANCZOS)
             return ImageTk.PhotoImage(img)
+        except Exception as e:
+            print(f"Erro ao carregar {nome}: {caminho}")
+            return None
+    
+    def carregar_sprite_direcional(self, nome):
+        caminho = os.path.join(SPRITE_PATH, nome)
+        try:
+            img = Image.open(caminho)
+            img = img.resize((CELL_SIZE, CELL_SIZE), Image.LANCZOS)
+
+            return {
+                RIGHT: ImageTk.PhotoImage(img),
+                LEFT: ImageTk.PhotoImage(img.transpose(Image.FLIP_LEFT_RIGHT)),
+                UP: ImageTk.PhotoImage(img.rotate(90, expand=True)),
+                DOWN: ImageTk.PhotoImage(img.rotate(-90, expand=True)),
+            }
         except Exception as e:
             print(f"Erro ao carregar {nome}: {caminho}")
             return None
@@ -86,15 +104,15 @@ class SimulacaoGUI:
             for j in range(malha.COLUNAS):
                 if (i, j) in ocupacao:
                     carro = ocupacao[(i, j)]
-
+                    direcao = carro.get_direcao_atual()
                     if carro.tipo_velocidade == "ambulancia":
-                        self.desenhar_sprite(i, j, self.ambulancia)
+                        self.desenhar_sprite(i, j, self.ambulancia[direcao])
                     elif carro.tipo_velocidade == "rapido":
-                        self.desenhar_sprite(i, j, self.carro_rapido)
+                        self.desenhar_sprite(i, j, self.carro_rapido[direcao])
                     elif carro.tipo_velocidade == "medio":
-                        self.desenhar_sprite(i, j, self.carro_medio)
+                        self.desenhar_sprite(i, j, self.carro_medio[direcao])
                     else:
-                        self.desenhar_sprite(i, j, self.carro_lento)
+                        self.desenhar_sprite(i, j, self.carro_lento[direcao])
                     continue
                 if malha.eh_semaforo((i, j)):
                     sem = malha.semaforos[(i, j)]
@@ -105,11 +123,7 @@ class SimulacaoGUI:
                     continue
                 if malha.malha[i][j] != malha.EMPTY:
                     self.desenhar_rua(i, j)
-
-        self.info.config(
-            text=f"Tick: {self.clock.tick} | {self.clock.estado_resumido()}"
-        )
-        self.root.after(100, self.atualizar)
+        self.root.after(40, self.atualizar)
 
     def run(self):
         self.root.mainloop()
