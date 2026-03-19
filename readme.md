@@ -113,3 +113,4 @@ python main.py
 ---
 
 ## 👨‍💻 Autores
+- @j0sevictor
