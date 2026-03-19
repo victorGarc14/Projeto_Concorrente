@@ -109,8 +109,3 @@ pip install -r requirements.txt
 cd Projeto_Concorrente
 python main.py
 ```
-
----
-
-## 👨‍💻 Autores
-- @j0sevictor
