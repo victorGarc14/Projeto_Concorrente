@@ -46,10 +46,11 @@ class Clock(threading.Thread):
 
             with self.tick_cond:
                 self.tick += 1
-                self.tick_cond.notify_all()
 
-            if self.tick % self.green_time == 0:
-                self.alternar_todos_os_semaforos()
+                if self.tick % self.green_time == 0:
+                    self.alternar_todos_os_semaforos()
+
+                self.tick_cond.notify_all()
 
     def stop(self):
         self.running = False

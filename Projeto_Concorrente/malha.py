@@ -51,6 +51,16 @@ class Semaforo:
                 if direcao in (UP, DOWN) and self.estado == LIBERA_COLUNA:
                     return
                 self.cond.wait()
+                
+    def forcar_linha(self):
+        with self.cond:
+            self.estado = LIBERA_LINHA
+            self.cond.notify_all()
+
+    def forcar_coluna(self):
+        with self.cond:
+            self.estado = LIBERA_COLUNA
+            self.cond.notify_all()
 
 
 
@@ -204,7 +214,9 @@ def renderizar_com_carros(ocupacao):
         for j in range(COLUNAS):
             if (i, j) in ocupacao:
                 carro = ocupacao[(i, j)]
-                if carro.tipo_velocidade == "rapido":
+                if carro.tipo_velocidade == "ambulancia":
+                    celula = "AM"
+                elif carro.tipo_velocidade == "rapido":
                     celula = "CR"
                 elif carro.tipo_velocidade == "medio":
                     celula = "CM"
