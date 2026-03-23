@@ -133,28 +133,27 @@ class Car(threading.Thread):
 
     def esperar_semaforo_se_necessario(self, prox):
         if not malha.eh_semaforo(prox):
-            return
+            return True
 
         sem = malha.obter_semaforo(prox)
         if sem is None:
-            return
+            return True
 
         if self.direcao_atual in (malha.RIGHT, malha.LEFT):
-            if sem.libera_linha():
-                return
+            if not sem.libera_linha():
+                sem.esperar_liberacao(self.direcao_atual)
         else:
-            if sem.libera_coluna():
-                return
-
-        sem.esperar_liberacao(self.direcao_atual)
+            if not sem.libera_coluna():
+                sem.esperar_liberacao(self.direcao_atual)
+        
+        return True
 
     def tentar_mover(self, tick):
         prox = self.escolher_movimento()
         if prox is None:
             return
 
-        self.esperar_semaforo_se_necessario(prox)
-
+        # Verifica se há colisão ou ocupação
         with ocupacao_lock:
             if prox in ocupacao:
                 carro_frente = ocupacao[prox]
@@ -164,9 +163,15 @@ class Car(threading.Thread):
                     return
                 return
 
-            del ocupacao[self.posicao]
-            ocupacao[prox] = self
-            self.posicao = prox
+        # Aguarda semáforo se necessário
+        self.esperar_semaforo_se_necessario(prox)
+
+        # Move para a próxima posição
+        with ocupacao_lock:
+            if prox not in ocupacao:
+                del ocupacao[self.posicao]
+                ocupacao[prox] = self
+                self.posicao = prox
 
     def run(self):
         while self.running:
