@@ -99,35 +99,36 @@ class SimulacaoGUI:
 
     def atualizar(self):
         try:
-            ocupacao = self.snapshot_func() 
-            self.canvas.delete("all") 
-            
-            for i in range(malha.LINHAS):
-                for j in range(malha.COLUNAS): 
-                    if (i, j) in ocupacao:
-                        carro = ocupacao[(i, j)]
-                        direcao = carro.get_direcao_atual()
-                        if carro.tipo_velocidade == "ambulancia":
-                            self.desenhar_sprite(i, j, self.ambulancia[direcao])
-                        elif carro.tipo_velocidade == "rapido":
-                            self.desenhar_sprite(i, j, self.carro_rapido[direcao])
-                        elif carro.tipo_velocidade == "medio":
-                            self.desenhar_sprite(i, j, self.carro_medio[direcao])
-                        else:
-                            self.desenhar_sprite(i, j, self.carro_lento[direcao])
-                        continue
-                    
-                    if malha.eh_semaforo((i, j)):
-                        sem = malha.semaforos[(i, j)]
-                        if sem.estado == malha.LIBERA_LINHA:
-                            self.desenhar_sprite(i, j, self.semaforo_linha)
-                        else:
-                            self.desenhar_sprite(i, j, self.semaforo_coluna)
-                        continue
-                    
-                    if malha.malha[i][j] != malha.EMPTY:
-                        self.desenhar_rua(i, j)
-            
+            if self.last_tick != self.clock.tick:
+                self.last_tick = self.clock.tick
+                ocupacao = self.snapshot_func()
+                self.canvas.delete("all")
+                for i in range(malha.LINHAS):
+                    for j in range(malha.COLUNAS):
+                        if (i, j) in ocupacao:
+                            carro = ocupacao[(i, j)]
+                            direcao = carro.get_direcao_atual()
+                            if carro.tipo_velocidade == "ambulancia":
+                                self.desenhar_sprite(i, j, self.ambulancia[direcao])
+                            elif carro.tipo_velocidade == "rapido":
+                                self.desenhar_sprite(i, j, self.carro_rapido[direcao])
+                            elif carro.tipo_velocidade == "medio":
+                                self.desenhar_sprite(i, j, self.carro_medio[direcao])
+                            else:
+                                self.desenhar_sprite(i, j, self.carro_lento[direcao])
+                            continue
+                        
+                        if malha.eh_semaforo((i, j)):
+                            sem = malha.semaforos[(i, j)]
+                            if sem.estado == malha.LIBERA_LINHA:
+                                self.desenhar_sprite(i, j, self.semaforo_linha)
+                            else:
+                                self.desenhar_sprite(i, j, self.semaforo_coluna)
+                            continue
+                        
+                        if malha.malha[i][j] != malha.EMPTY:
+                            self.desenhar_rua(i, j)
+                
             self.root.after(40, self.atualizar)
         except Exception as e:
             print(f"Erro na atualização da GUI: {e}")

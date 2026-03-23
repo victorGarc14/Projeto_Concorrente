@@ -4,7 +4,7 @@ from gui import SimulacaoGUI
 
 
 if __name__ == "__main__":
-    clock = Clock(tick_duration=0.8)
+    clock = Clock(tick_duration=0.6)
     carros = criar_carros(clock)
 
     clock.start()

@@ -75,8 +75,8 @@ class Car(threading.Thread):
             return None
         return prox
 
-    def get_direcao_atual(self): 
-        return self.direcao_atual 
+    def get_direcao_atual(self):
+        return self.direcao_atual
 
     def opcoes_de_movimento(self):
         i, j = self.posicao
@@ -152,15 +152,17 @@ class Car(threading.Thread):
         prox = self.escolher_movimento()
         if prox is None:
             return
+        if malha.eh_semaforo(prox):
+            sem = malha.obter_semaforo(prox)
 
-        # Verifica se há colisão ou ocupação
+            if self.direcao_atual in (malha.RIGHT, malha.LEFT):
+                if not sem.libera_linha():
+                    return
+            else:
+                if not sem.libera_coluna():
+                    return
         with ocupacao_lock:
             if prox in ocupacao:
-                carro_frente = ocupacao[prox]
-
-                # desaceleração natural
-                if self.intervalo_ticks < carro_frente.intervalo_ticks:
-                    return
                 return
 
         # Aguarda semáforo se necessário
@@ -194,23 +196,29 @@ class Car(threading.Thread):
 
 
 def criar_carros(clock):
-    from ambulance import Ambulancia  
+    from ambulance import Ambulancia
+
     tipos = [
-        "rapido", "rapido",
-        "medio", "medio",
-        "lento", "lento",
-        "medio", "medio", "medio", "medio",
+        "rapido",
+        "rapido",
+        "medio",
+        "medio",
+        "lento",
+        "lento",
+        "medio",
+        "medio",
+        "medio",
+        "medio",
     ]
 
     posicoes = posicoes_iniciais_possiveis()
     escolhidas = random.sample(posicoes, len(tipos) + 1)
 
     carros = []
-    
+
     amb = Ambulancia(0, escolhidas[0], clock)
     carros.append(amb)
-    
-    
+
     for idx, (tipo, pos) in enumerate(zip(tipos, escolhidas[1:]), start=1):
         carro = Car(idx, tipo, pos, clock)
         carros.append(carro)
@@ -227,5 +235,5 @@ def estado_atual_carros():
     with ocupacao_lock:
         return sorted(
             [(car.car_id, car.tipo_velocidade, pos) for pos, car in ocupacao.items()],
-            key=lambda x: x[0]
+            key=lambda x: x[0],
         )
