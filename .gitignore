@@ -1,3 +1,54 @@
-*.pyc
-*.cpyth
-__pycache__/*
+# Bytecode Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+ENV/
+
+# Arquivos de configuração do ambiente
+.env
+.env.*
+
+# Cache e logs
+*.log
+*.out
+*.err
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# IDEs e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jupyter Notebook (se usar)
+.ipynb_checkpoints/
+
+# Arquivos de build/distribuição
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# PyInstaller
+*.spec
+
+# Coverage / testes
+.coverage
+htmlcov/
+
+# Mypy / type checking
+.mypy_cache/
+.pytest_cache/
+
+# Pillow / imagens temporárias (opcional)
+*.png~
+*.jpg~
+*.jpeg~

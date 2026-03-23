@@ -31,7 +31,7 @@ Demonstrar conceitos de:
 - **CR** → Carro rápido (vermelho)
 - **CM** → Carro médio (laranja)
 - **CL** → Carro lento (amarelo)
-- **AM** → Ambulância (prioridade)
+- **AM** → Ambulância
 
 ---
 
@@ -54,11 +54,9 @@ A interface mostra:
 - Veículos em tempo real
 - Estado dos semáforos
 
-Atualização baseada em:
+Atualizações sicronizadas com os ticks do relógio.
 
-```python
-root.after(100, atualizar)
-```
+---
 
 ## 🎮 Funcionamento
 
